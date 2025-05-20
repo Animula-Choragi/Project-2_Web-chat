@@ -12,6 +12,9 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
+  // Kirim pesan ke pengguna baru
+  socket.emit('welcome message', 'Selamat datang di Web Chat!');
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
