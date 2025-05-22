@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Chat Sederhana</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .chat-layout{
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .chat-main {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      font-family: Arial, Helvetica, sans-serif;
+      text-align: center;
+    }
+    #messages {
+      width: 300px;
+      margin: 0 auto;
+      border: 1px solid #ddd;
+      padding: 10px;
+      height: 200px;
+      overflow-y: scroll;
+    }
+    #form {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body class="chat-layout">
+  <main class="chat-main">
+    <h2 class="page-header">Web Chat Sederhana</h2>
+    <div id="messages"></div>
+    <form id="form">
+      <input type="text" id="message" autocomplete="off" required />
+      <button type="submit" class="btn">Kirim</button>
+    </form>
+  </main>
+
+  <script>
+    const socket = io();
+    
+    document.getElementById("form").addEventListener("submit", function(event) {
+      event.preventDefault();
+      let msg = document.getElementById("message").value;
+      socket.emit("chat message", msg); // Kirim pesan ke server
+
+      document.getElementById("message").value = ""; // Kosongkan input
+    });
+
+    socket.on("chat message", function(msg) {
+      let item = document.createElement("p");
+      item.textContent = msg;
+
+      document.getElementById("messages").appendChild(item);
+    });
+  </script>
+</body>
+</html>

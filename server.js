@@ -5,15 +5,17 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 
-app.get('/', (req, res) => {
-  res.send('<h1>Server Web Chat Berjalan!</h1>');
-});
+// Sajikan file statis dari folder "public"
+app.use(express.static('public'));
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
-  // Kirim pesan ke pengguna baru
-  socket.emit('welcome message', 'Selamat datang di Web Chat!');
+  // Menerima pesan dari klien dan menyebarkan ke semua klien lain
+  socket.on('chat message', (msg) => {
+    console.log('Pesan diterima:' , msg);
+    io.emit('chat message', msg); // Mengirim pesan ke semua pengguna
+  });
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
