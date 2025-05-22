@@ -11,10 +11,10 @@ app.use(express.static('public'));
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
-  // Menerima pesan dari klien dan menyebarkan ke semua klien lain
+  // agar setiap pengguna dapat mengirimkan nama mereka
   socket.on('chat message', (msg) => {
-    console.log('Pesan diterima:' , msg);
-    io.emit('chat message', msg); // Mengirim pesan ke semua pengguna
+    console.log('Pesan diterima:', `${msg.username}: ${msg.message}`);
+    io.emit('chat message', `${msg.username}: ${msg.message}`);
   });
 
   socket.on('disconnect', () => {

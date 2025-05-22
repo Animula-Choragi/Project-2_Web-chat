@@ -44,6 +44,7 @@
     <h2 class="page-header">Web Chat Sederhana</h2>
     <div id="messages"></div>
     <form id="form">
+      <input type="text" id="username" placeholder="Masukkan Nama" required />
       <input type="text" id="message" autocomplete="off" required />
       <button type="submit" class="btn">Kirim</button>
     </form>
@@ -54,8 +55,9 @@
     
     document.getElementById("form").addEventListener("submit", function(event) {
       event.preventDefault();
+      let username = document.getElementById("username").value;
       let msg = document.getElementById("message").value;
-      socket.emit("chat message", msg); // Kirim pesan ke server
+      socket.emit("chat message", { username, message: msg}); // Kirim pesan ke server
 
       document.getElementById("message").value = ""; // Kosongkan input
     });
