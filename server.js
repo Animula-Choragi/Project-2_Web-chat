@@ -31,7 +31,6 @@ app.post('/login', (req, res) => {
 
 // Endpoint logout
 app.get('/logout', (req, res) => {
-  console.log("berhasil logout");
   delete usersOnline[req.session.username];
   io.emit("user list", Object.keys(usersOnline));
   req.session.destroy();
