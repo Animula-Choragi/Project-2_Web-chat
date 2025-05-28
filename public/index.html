@@ -26,6 +26,11 @@
       font-family: Arial, Helvetica, sans-serif;
       text-align: center;
     }
+
+    .web-box{
+      display: none;
+    }
+
     #messages {
       width: 300px;
       margin: 0 auto;
@@ -41,33 +46,54 @@
 </head>
 <body class="chat-layout">
   <main class="chat-main">
-    <h2 class="page-header">Web Chat Sederhana</h2>
-    <div id="messages"></div>
-    <form id="form">
-      <input type="text" id="username" placeholder="Masukkan Nama" required />
-      <input type="text" id="message" autocomplete="off" required />
-      <button type="submit" class="btn">Kirim</button>
-    </form>
+    <section class="login-form">
+      <h2 class="section-header">Login ke Web Chat</h2>
+      <form id="loginForm" method="POST" action="/login">
+        <input type="text" id="username" name="username" placeholder="Masukkan Nama" required />
+        <button type="submit">Login</button>
+      </form>
+
+      <h3 class="list-onlineuser">Daftar Pengguna Online</h3>
+      <ul id="usersOnline"></ul>
+    </section>
+
+    <section id="web-box">
+      <h2 class="page-header">Web Chat Sederhana</h2>
+      <div id="messages"></div>
+      <form id="form-web">
+        <!-- <input type="text" id="username" placeholder="Masukkan Nama" required /> -->
+        <input type="text" id="message" autocomplete="off" required />
+        <button type="submit" class="btn">Kirim</button>
+      </form>
+      <a href="/logout">Logout</a>
+    </section>
   </main>
 
   <script>
-    const socket = io();
-    
-    document.getElementById("form").addEventListener("submit", function(event) {
-      event.preventDefault();
-      let username = document.getElementById("username").value;
-      let msg = document.getElementById("message").value;
-      socket.emit("chat message", { username, message: msg}); // Kirim pesan ke server
+    const socket = io({
+      auth: { username: sessionStorage.getItem("username")}
+    });
 
-      document.getElementById("message").value = ""; // Kosongkan input
+    socket.on("user list", function(users) {
+      document.getElementById("usersOnline").innerHTML = users.map(u => `<li>${u}</li>`).join("");
+    });
+
+    document.getElementById("form-web").addEventListener("submit", function(event) {
+      event.preventDefault();
+      let msg = document.getElementById("message").value;
+      socket.emit("chat message", msg);
+      document.getElementById("message").value = "";
     });
 
     socket.on("chat message", function(msg) {
       let item = document.createElement("p");
       item.textContent = msg;
-
       document.getElementById("messages").appendChild(item);
     });
+
+    if (localStorage.getItem("username")) {
+      document.getElementsId("web-box").style.display = "block";
+    };
   </script>
 </body>
 </html>
