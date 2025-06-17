@@ -15,11 +15,11 @@ io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
   // 1. Terima pesan dari client.
-    // Pesan ini dikirim dari klien melalui socket.emit('chat message', msg);
-  socket.on('chat message', (msg) => {
-    console.log('Pesan diterima:', msg);
-    // 2. Kirim pesan ke semua client lain yg terhubung dengan server.
-    io.emit('chat message', msg); 
+    // Pesan ini dikirim dari klien melalui socket.emit('chat message', { username, message: msg });
+  socket.on('chat message', (data) => {
+    console.log('Pesan diterima:', `${data.username}: ${data.message}`);
+    // 2. Kirim pesan ke SEMUA client lain yg terhubung dengan server.
+    io.emit('chat message', `${data.username}: ${data.message}`);
   });
 
   // Kode dijalankan ketika client/pengguna terputus dari server (misal: user menutup tab, koneksi internet putus, atau refresh halaman).
