@@ -24,36 +24,63 @@
   <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-  <h2>Web Chat Sederhana</h2>
-  <div id="messages"></div>
-  <form id="form">
-    <input type="text" id="username" placeholder="Masukkan Nama" required />
-    <input type="text" id="message" autocomplete="off" required />
-    <button type="submit">Kirim</button>
+  <h2>Login ke Web Chat</h2>
+  <form action="/login" id="loginForm" method="POST">
+    <input type="text" id="username" name="username" placeholder="Masukkan Nama" required />
+    <button type="submit">Login</button>
   </form>
-  <script>
-    // Inisialisasi koneksi socket.io
-    const socket = io();
 
-    // Mengambil tag dengan id=form & nambah eventlistener apabila ada aksi "submit" di form.
-      // kemudian, jalankan fungsi yang ada di dalamnya.
+  <h3>Daftar Pengguna Online</h3>
+  <ul id="usersOnline"></ul>
+
+  <div id="chatBox" style="display: none;">
+    <h2>Web Chat</h2>
+    <div id="messages"></div>
+    <form id="form">
+      <input type="text" id="message" autocomplete="off" required />
+      <button type="submit">Kirim</button>
+    </form>
+    <!-- localStorage hanya tersedia di browser (client-side), bukan di server -->
+    <a href="/logout" onclick="localStorage.removeItem('username')">Logout</a>
+  </div>
+  <script>
+
+    // Tambahan untuk sesi 10
+    // Cek apakah ada username di localStorage
+    document.getElementById("loginForm").addEventListener("submit", function(event) {
+
+      // Ambil username dari input
+      const username = document.getElementById("username").value;
+
+      // Simpan username ke localStorage
+      localStorage.setItem("username", username);
+
+
+    });
+
+    // Inisialisasi koneksi socket.io
+    const socket = io({
+      auth: { username: localStorage.getItem("username")},
+    });
+
+    socket.on("user list", function(users) {
+      document.getElementById("usersOnline").innerHTML = users.map(u => `<li>${u}</li>`).join("");
+    }); 
+
+
     document.getElementById("form").addEventListener("submit", function(event){
       
       // 1. Cegah aksi default dari form (yaitu reload halaman) saat submit di klik
         //    kita tidak ingin itu terjadi, kita ingin mengirim pesan tanpa reload
       event.preventDefault();
 
-      // 2a. Ambil value yg di input dri tag dengan id = username & disimpan di variabel username
-      let username = document.getElementById("username").value;
-
       // 2b. Ambil value yg di input dri tag dengan id = message & disimpan di variabel msg
       let msg = document.getElementById("message").value; 
 
       // 3. Client (browser) kirim pesan ke server sesuai variabel username dan msg
-      socket.emit("chat message", { username, message: msg }); 
+      socket.emit("chat message", msg); 
 
-      // 4. Value tag dengan id message dan username di-set menjadi string kosong
-      document.getElementById("username").value = ""; 
+      // 4. Value tag dengan id message dan username di-set menjadi string kosong 
       document.getElementById("message").value = ""; 
     });
 
@@ -64,11 +91,19 @@
       let item = document.createElement("p"); 
       
       // 7. Mengisi variabel item dengan text content sesuai dengan msg yang diterima 
-      item.textContent = msg;
+      let client = localStorage.getItem('username');
+      item.textContent = client + " : " + msg;
 
       // 8. Tambahkan variabel item ke dalam tag (div) dengan id messages
       document.getElementById("messages").appendChild(item);
     });
+
+    if (localStorage.getItem("username")) {
+      // Munculkan chat box
+      document.getElementById("chatBox").style.display = "block";
+      // Sembunyikan form login
+      document.getElementById("loginForm").style.display = "none";
+    };
   </script>
 </body>
 </html>
