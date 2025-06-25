@@ -72,3 +72,14 @@ Proyek aplikasi web chat sederhana ini dibangun dengan Node.js (Runtime JavaScri
       - CLIENT : socket.emit('pesan', data)   --->     SERVER : socket.on('pesan', callback)
       - CLIENT : socket.on('balasan', callback)     <---     SERVER : socket.emit('balasan', data)
 
+
+### Sesi 4 : Membuat Fitur Chat Grup
+
+- [x] Menampilkan pilihan grup.
+- [x] Menyebarkan pesan hanya ke user dengan group yang sama.
+
+<br />
+
+- Materi sesi 3 : Komponen komunikasi real-time (client-server)  
+   - io.to() = mengirim pesan ke client tertentu/semua client yg ada di dalam sebuah "room".
+

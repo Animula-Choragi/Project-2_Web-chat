@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web Chat Sederhana</title>
+  <title>Web Chat - Grup</title>
   <style>
     body {
       font-family: Arial, Helvetica, sans-serif;
@@ -24,25 +24,38 @@
   <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-  <h2>Login ke Web Chat</h2>
+  <h2>Web Chat - Grup</h2>
+
   <form action="/login" id="loginForm" method="POST">
     <input type="text" id="username" name="username" placeholder="Masukkan Nama" required />
     <button type="submit">Login</button>
   </form>
 
-  <h3>Daftar Pengguna Online</h3>
-  <ul id="usersOnline"></ul>
+  <section id="content" style="display: none;">
 
-  <div id="chatBox" style="display: none;">
-    <h2>Web Chat</h2>
-    <div id="messages"></div>
-    <form id="form">
-      <input type="text" id="message" autocomplete="off" required />
-      <button type="submit">Kirim</button>
-    </form>
-    <!-- localStorage hanya tersedia di browser (client-side), bukan di server -->
-    <a href="/logout" onclick="localStorage.removeItem('username')">Logout</a>
-  </div>
+    <label for="groupSelect">Pilih Grup:</label>
+    <select id="groupSelect">
+      <option value="umum">Umum</option>
+      <option value="teknologi">Teknologi</option>
+      <option value="hiburan">Hiburan</option>
+    </select>
+    <button onclick="joinGroup()">Gabung</button>
+
+    <h3>Daftar Pengguna Grup</h3>
+    <ul id="groupUsers"></ul>
+  
+    <div id="chatBox" style="display: none;">
+      <h2>Chat Grup</h2>
+      <div id="messages"></div>
+      <form id="form">
+        <input type="text" id="message" autocomplete="off" required />
+        <button type="submit">Kirim</button>
+      </form>
+      <a href="/logout" onclick="localStorage.removeItem('username')">Logout</a>
+    </div>
+
+  </section>
+
   <script>
 
     // Tambahan untuk sesi 10
@@ -52,48 +65,49 @@
       localStorage.setItem("username", username);
     });
 
-    // Inisialisasi koneksi socket.io
     const socket = io({
       auth: { username: localStorage.getItem("username")},
     });
 
-    socket.on("user list", function(users) {
-      document.getElementById("usersOnline").innerHTML = users.map(u => `<li>${u}</li>`).join("");
-    }); 
+    function joinGroup() {
+      let group = document.getElementById("groupSelect").value;
+      socket.emit("join group", group);
 
+      document.getElementById("chatBox").style.display = "block";
+    }
+
+    socket.on("group users", function(users) {
+      document.getElementById("groupUsers").innerHTML = users.map(u => `<li>${u}</li>`).join("");
+    }); 
 
     document.getElementById("form").addEventListener("submit", function(event){
       
       // 1. Cegah aksi default dari form (reload halaman) saat submit di klik
       event.preventDefault();
-
-      // 2b. Ambil value message yg di input
       let message = document.getElementById("message").value; 
-
-      // 3. Client (browser) kirim pesan ke server
-      socket.emit("client send", message); 
-
-      // 4. Value message di-set menjadi string kosong 
+      let group = document.getElementById("groupSelect").value; 
+      socket.emit("send message", { group, message }); 
       document.getElementById("message").value = ""; 
     });
 
-    // 5. Terima pesan dari server, dan jalankan fungsi
-    socket.on("server send", function(message) {
-
       // 6. Buat elemen p/paragraph
+    socket.on("chat message", function(msg) {
       let item = document.createElement("p"); 
       
       // 7. Isi text content sesuai dengan isi message yang diterima
       item.textContent = message;
 
       // 8. Tambahkan isi item sebagai messages
+      // let client = localStorage.getItem('username');
+      item.textContent = msg;
       document.getElementById("messages").appendChild(item);
     });
 
     // 9. Kondisi tag saat username ada di localStorage
     if (localStorage.getItem("username")) {
-      document.getElementById("chatBox").style.display = "block";
-      // document.getElementById("loginForm").style.display = "none";
+      // document.getElementById("chatBox").style.display = "block";
+      document.getElementById("content").style.display = "block";
+      document.getElementById("loginForm").style.display = "none";
     };
   </script>
 </body>
