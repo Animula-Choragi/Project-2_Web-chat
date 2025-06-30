@@ -6,9 +6,8 @@ const app = express(); // instance dari fungsi factory modul express (createAppl
 const server = http.createServer(app); // instance dari class modul http (http.Server)
 const io = new Server(server); // instance dari class modul socket.io (Server)
 
-app.get('/', (req, res) => {
-  res.send('<h1>Server Web Chat Berjalan!</h1>');
-});
+// Sajikan file statis dari 'public'
+app.use(express.static('public'));
 
 // Hanya aktif kalau ada request dari sisi client setelah memuat file index.html (index.html harus ada dlu)
 io.on('connection', (socket) => {
