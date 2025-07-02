@@ -3,15 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web Chat - Koneksi</title>
+  <title>Web Chat Sederhana</title>
   <script src="/socket.io/socket.io.js"></script>
+  <style>
+
+    body { 
+      font-family: Arial, sans-serif;
+      text-align: center; 
+    }
+
+    #messages { 
+      width: 300px; 
+      margin: 0 auto;
+      border: 1px solid #ddd; 
+      padding: 10px; 
+      height: 200px; 
+      overflow-y: scroll; 
+    }
+
+    #form { 
+      margin-top: 10px; 
+    }
+
+  </style>
 </head>
 <body>
-  <h1>Web chat sisi klien</h1>
+  <h1>Web Chat Sederhana</h1>
+
+  <div id="messages"></div>
+
+  <form id="form">
+    <input type="text" id="username" placeholder="Masukkan Nama" autofocus required>
+    <input type="text" id="message" autocomplete="off" required />
+    <button type="submit">Kirim</button>
+  </form>
 
 </body>
 <script>
   // inisialisasi socket.io di sisi client
   const socket = io();
+
+  const form = document.getElementById("form");
+  const username = document.getElementById("username");
+  const message = document.getElementById("message");
+  const messages = document.getElementById("messages");
+
+
+  // Kirim 'pesan' ke server
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    
+    // Ambil nilai yg di input 
+    const uname = username.value;
+    const msg = message.value;
+
+    // Kirim sebagai objek
+    socket.emit('client msg', { username: uname, message: msg }); 
+
+    // Set value ke string kosong
+    username.value = "";
+    message.value = "";
+  });
+
+  // Terima 'pesan' dari server
+  socket.on('server msg', (msg) => {
+    const item = document.createElement("p");
+
+    // Masukkan teks ke dalam tag item
+    item.textContent = `${msg.username}: ${msg.message}`;
+
+    // Tambah item sebagai tag baru ke dalam tag messages
+    messages.appendChild(item);
+  });
+
 </script>
 </html>
