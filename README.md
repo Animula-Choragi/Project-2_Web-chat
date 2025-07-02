@@ -36,3 +36,23 @@ Proyek aplikasi web chat sederhana ini dibangun dengan [Node.js](https://nodejs.
 - Pada aplikasi web chat 2 komunikasi ini digunakan :
    - HTTP untuk menangani permintaan HTTP biasa (misal : GET /).
    - WebSocket menangani permintaan real-time (upgrade ke websocket).
+
+### Sesi 2 : Implementasi WebSocket untuk Pesan Teks
+
+- [x] Buat halaman HTML sederhana untuk chat.
+- [x] Kirim & terima pesan (username & isi pesan) secara real-time.
+
+<br />
+
+- Materi sesi 2 : Metode komunikasi real-time (client-server dengan Socket.IO)
+   - socket = digunakan di **CLIENT & SERVER**
+   - io = Hanya digunakan di **SERVER**
+
+   - on = Menerima
+      - socket.on = terima event dri **CLIENT/SERVER**.
+      - io.on = terima **KONEKSI** client (dipakai di server saja).
+
+   - emit = Mengirim
+      - socket.emit = kirim event ke **CLIENT/SERVER**.
+      - io.emit = kirim event ke **SEMUA** client yang terhubung (dipakai di server saja).
+
