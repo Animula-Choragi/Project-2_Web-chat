@@ -19,6 +19,7 @@ app.use(session({
 }));
 
 let usersOnline = {} // Simpan daftar pengguna online sebagai objek
+let groups = {};
 
 // Endpoint login
 app.post('/login', ( req, res ) => {
@@ -45,6 +46,22 @@ io.on('connection', (socket) => {
     usersOnline[username] = socket.id;
     io.emit('user list', Object.keys(usersOnline));
     // io.emit('user join', `${username} telah bergabung`);
+
+    socket.on('join group', (group) => {
+      socket.join(group);
+      if (!groups[group]) groups[group] = [];
+      
+      if (!groups[group].includes(username)) {
+        groups[group].push(username);
+        io.to(group).emit('server msg', { username: username, group: group });
+      };
+      
+      io.to(group).emit('group users', groups[group]);
+      
+      // console.log(typeof groups[group]);
+      // console.log(groups[group]);
+    });
+
   };
   console.log('🟢 User connected:', socket.id);
 
@@ -53,15 +70,21 @@ io.on('connection', (socket) => {
     console.log(`${username}: ${data.message}`);
     
     // kirim 'pesan' ke semua client yg terhubung as object
-    io.emit('server msg', { username: username, message: data.message, sentAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) });
+    io.to(data.group).emit('server msg', { username: username, message: data.message, sentAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) });
   });
 
   socket.on('disconnect', () => {
+    
     if (username) {
       // io.emit('user join', `${username} telah keluar`)
       delete usersOnline[username];
       io.emit('user list', Object.keys(usersOnline));
+      for (let group in groups) {
+        groups[group] = groups[group].filter(user => user !== username);
+        io.to(group).emit('group users', groups[group]);
+      };
     };
+
     console.log('🔴 User disconnected:', socket.id);
   });
 });

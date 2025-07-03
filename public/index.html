@@ -80,14 +80,14 @@
       cursor: pointer;
     }
 
-    .main {
+    #main {
       flex: 1;
       display: flex;
       overflow: hidden;
     }
 
     /* Sidebar kiri */
-    .sidebar {
+    #sidebar {
       width: 30%;
       max-width: 280px;
       background: #ffffff;
@@ -96,7 +96,7 @@
       overflow-y: auto;
     }
 
-    .sidebar h3 {
+    #sidebar h3 {
       font-size: 15px;
       margin-bottom: 8px;
       color: #075e54;
@@ -130,7 +130,7 @@
     }
 
     #messages p {
-      max-width: 70%;
+      max-width: 100%;
       margin-bottom: 8px;
       padding: 10px 16px;
       border-radius: 8px;
@@ -142,6 +142,7 @@
       margin-right: 0;
       display: inline-block;
       position: relative;
+      text-align: center;
     }
 
     #messages p.me {
@@ -228,12 +229,12 @@
 
     /* Responsive */
     @media (max-width: 768px) {
-      .main {
+      #main {
         flex-direction: column;
         overflow-y: auto;
       }
 
-      .sidebar {
+      #sidebar {
         display: none;
         width: 100%;
         max-height: 150px;
@@ -262,7 +263,7 @@
     <header>
       <div class="header-left">
         <h1>Web Chat</h1>
-        <a href="/logout" onclick='localStorage.removeItem("username")'>Logout</a>
+        <a id="logout" href="/logout" onclick='localStorage.removeItem("username")'>Logout</a>
       </div>
     </header>
 
@@ -271,10 +272,26 @@
       <button type="submit">Login</button>
     </form>
 
-    <div class="main">
-      <aside class="sidebar">
-        <h3>Daftar Pengguna Online</h3>
-        <ul id="usersOnline"></ul>
+    <div id="main">
+      <aside id="sidebar">
+        <div class="sidebar-component">
+          <h3>Pilih Grup:</h3>
+          <label for="groupSelect">Pilih Grup</label>
+          <select id="groupSelect">
+            <option value="umum">Umum</option>
+            <option value="teknologi">Teknologi</option>
+            <option value="hiburan">Hiburan</option>
+          </select>
+          <button onclick="joinGroup()">Gabung</button>
+        </div>
+        <div class="sidebar-component">
+          <h3>Daftar Anggota Grup</h3>
+          <ul id="groupUsers"></ul>
+        </div>
+        <div class="sidebar-component">
+          <h3>Daftar Pengguna Online</h3>
+          <ul id="usersOnline"></ul>
+        </div>
       </aside>
 
       <div id="chatBox">
@@ -295,7 +312,13 @@
   const loginForm = document.getElementById("loginForm");
   const username = document.getElementById("username");
   const usersOnline = document.getElementById("usersOnline");
+
+  const groupSelect = document.getElementById("groupSelect");
+  const groupUsers = document.getElementById("groupUsers");
   
+  const main = document.getElementById("main");
+  const logout = document.getElementById("logout");
+
   const chatBox = document.getElementById("chatBox");
   const message = document.getElementById("message");
   const form = document.getElementById("form");
@@ -312,6 +335,17 @@
     auth: { username: localStorage.getItem("username") }
   });
 
+  const joinGroup = () => {
+    const group = groupSelect.value;
+    console.log(group)
+    
+    socket.emit('join group', group);
+  };
+
+  socket.on('group users', (users) => {
+    groupUsers.innerHTML = users.map(u => `<li>${u}</li>`).join("");
+  });
+
   socket.on('user list', (users) => {
     usersOnline.innerHTML = users.map(u => `<li>${u}</li>`).join("");
   });
@@ -320,43 +354,53 @@
   form.addEventListener('submit', (event) => {
     event.preventDefault(); 
     const msg = message.value;
+
+    const group = groupSelect.value;
     
-    socket.emit('client msg', { message: msg }); // Kirim sebagai objek
+    socket.emit('client msg', { group: group, message: msg }); // Kirim sebagai objek
 
     message.value = "";
   });
 
   // Terima 'pesan' dari server
-
-  
   socket.on('server msg', (msg) => {
     const item = document.createElement("p");
-    // elemen uname
-    const uname = document.createElement("span");
-    uname.className = "uname";
-    uname.textContent = `${msg.username}`;
 
-    // Elemen isi pesan
-    const messageText = document.createElement("span");
-    messageText.className = "messageText";
-    messageText.textContent = `${msg.message}`;
+    console.log(msg.message);
 
-    // elemen time
-    const time = document.createElement("span");
-    time.className = "time";
-    time.textContent = `${msg.sentAt}`;
+    if (msg.message) {
 
-    item.appendChild(uname);
-    item.appendChild(messageText);
-    item.appendChild(time);
+      // elemen uname
+      const uname = document.createElement("span");
+      uname.className = "uname";
+      uname.textContent = `${msg.username}`;
 
-    // item.textContent = `${msg.username}: ${msg.message}`;
+      // Elemen isi pesan
+      const messageText = document.createElement("span");
+      messageText.className = "messageText";
+      messageText.textContent = `${msg.message}`;
 
-    if (msg.username === localStorage.getItem("username")) {
-      item.classList.add("me");
+      // elemen time
+      const time = document.createElement("span");
+      time.className = "time";
+      time.textContent = `${msg.sentAt}`;
+
+      item.appendChild(uname);
+      item.appendChild(messageText);
+      item.appendChild(time);
+
+      // item.textContent = `${msg.username}: ${msg.message}`;
+
+      if (msg.username === localStorage.getItem("username")) {
+        item.classList.add("me");
+      } else {
+        item.classList.add("other");
+      };
     } else {
-      item.classList.add("other");
+      item.textContent = `${msg.username} bergabung ke group ${msg.group}`;
     };
+
+
 
     messages.appendChild(item); // Tambah item sebagai tag baru ke dalam tag messages
     messages.scrollTop = messages.scrollHeight;
@@ -374,7 +418,9 @@
   // });
 
   if (!localStorage.getItem("username")) {
-    chatBox.style.display = "none";
+    // chatBox.style.display = "none";
+    logout.style.display = "none";
+    main.style.display = "none";
   } else {
     loginForm.style.display = "none";
   };
