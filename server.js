@@ -1,27 +1,67 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const session = require('express-session');
 
 const app = express(); // instance dari fungsi factory modul express (createApplication())
 const server = http.createServer(app); // instance dari class modul http (http.Server)
 const io = new Server(server); // instance dari class modul socket.io (Server)
 
-// Sajikan file statis dari folder 'public'
+
 app.use(express.static('public'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use(session({
+  secret: 'secret-key',
+  resave: false,
+  saveUninitialized: true,
+}));
+
+let usersOnline = {} // Simpan daftar pengguna online sebagai objek
+
+// Endpoint login
+app.post('/login', ( req, res ) => {
+  const { username } = req.body;
+  if (!username) return res.status(400).send("Username diperlukan");
+
+  req.session.username = username;
+  res.redirect('/');
+});
+
+// Endpoint logout
+app.get('/logout', ( req, res ) => {
+  delete usersOnline[req.session.username];
+  io.emit('user list', Object.keys(usersOnline));
+  req.session.destroy();
+  res.redirect('/');
+});
+
 
 // Hanya aktif kalau ada request dari sisi client setelah memuat file index.html (index.html harus ada dlu)
 io.on('connection', (socket) => {
+  let username = socket.handshake.auth.username;
+  if (username) {
+    usersOnline[username] = socket.id;
+    io.emit('user list', Object.keys(usersOnline));
+    // io.emit('user join', `${username} telah bergabung`);
+  };
   console.log('🟢 User connected:', socket.id);
 
   // Terima 'pesan' dri client
   socket.on('client msg', (data) => {
-    console.log(`${data.username}: ${data.message}`);
+    console.log(`${username}: ${data.message}`);
     
     // kirim 'pesan' ke semua client yg terhubung as object
-    io.emit('server msg', { username: data.username, message: data.message });
+    io.emit('server msg', { username: username, message: data.message, sentAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) });
   });
 
   socket.on('disconnect', () => {
+    if (username) {
+      // io.emit('user join', `${username} telah keluar`)
+      delete usersOnline[username];
+      io.emit('user list', Object.keys(usersOnline));
+    };
     console.log('🔴 User disconnected:', socket.id);
   });
 });

@@ -6,197 +6,378 @@
   <title>Web Chat Sederhana</title>
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    html, body {
-      height: 100%;
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-    body { 
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      min-height: 100vh;
+
+    body, html {
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #e5ddd5;
+    }
+
+    .wrapper {
       display: flex;
       flex-direction: column;
+      height: 100vh;
     }
-    h1 {
-      background: #4a90e2;
+
+    header {
+      background: #075e54;
       color: white;
-      text-align: center;
-      padding: 18px 0;
-      margin: 0;
-      font-size: 26px;
-      border-bottom: 2px solid #357abd;
-      letter-spacing: 1px;
-      width: 100vw;
-      box-sizing: border-box;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #064c48;
     }
-    #messages { 
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px 18px;
-      background: white;
-      width: 100vw;
-      margin: 0;
-      box-sizing: border-box;
-      border-left: none;
-      border-right: none;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .header-left h1 {
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .header-left a {
+      text-decoration: none;
+      color: white;
+      font-size: 14px;
+      background-color: #25d366;
+      padding: 6px 12px;
+      border-radius: 4px;
+    }
+
+    #loginForm {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 10px;
+      background: #ffffff;
       border-bottom: 1px solid #ddd;
     }
+
+    #loginForm input {
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    #loginForm button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Sidebar kiri */
+    .sidebar {
+      width: 30%;
+      max-width: 280px;
+      background: #ffffff;
+      border-right: 1px solid #ddd;
+      padding: 14px;
+      overflow-y: auto;
+    }
+
+    .sidebar h3 {
+      font-size: 15px;
+      margin-bottom: 8px;
+      color: #075e54;
+    }
+
+    #usersOnline {
+      list-style: none;
+      font-size: 14px;
+    }
+
+    #usersOnline li {
+      padding: 6px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    /* Chat Box kanan */
+    #chatBox {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #e5ddd5;
+    }
+
+    #messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #messages p {
+      max-width: 70%;
+      margin-bottom: 8px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      word-break: break-word;
+      font-size: 15px;
+      box-shadow: 0 1px 1.5px rgba(0,0,0,0.07);
+      margin-top: 0;
+      margin-left: 0;
+      margin-right: 0;
+      display: inline-block;
+      position: relative;
+    }
+
+    #messages p.me {
+      background: #dcf8c6;
+      align-self: flex-end;
+      text-align: right;
+      border-bottom-right-radius: 2px;
+      border-top-right-radius: 8px;
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+    }
+
+    #messages p.other {
+      background: #fff;
+      align-self: flex-start;
+      text-align: left;
+      border-bottom-left-radius: 2px;
+      border-top-right-radius: 8px;
+      border-top-left-radius: 8px;
+      border-bottom-right-radius: 8px;
+      border: 1px solid #ececec;
+    }
+
+    .uname {
+      font-weight: bold;
+      font-size: 12px;
+      color: #666;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .messageText {
+      display: block;
+    }
+
+
+    .time {
+      display: block;
+      font-size: 10px;
+      color: #999;
+      float: right;
+      margin-top: 4px;
+    }
+
+    #form {
+      padding: 14px;
+      background: #f0f0f0;
+      border-top: 1px solid #ddd;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    #message {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      font-size: 15px;
+      background: #fff;
+    }
+
+    button {
+      background: #075e54;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    /* Scrollbar */
     #messages::-webkit-scrollbar {
       width: 8px;
     }
+
     #messages::-webkit-scrollbar-thumb {
       background: #ccc;
       border-radius: 4px;
     }
-    #messages p {
-      margin-bottom: 12px;
-      padding: 10px 14px;
-      background: #e8f4fd;
-      border: 1px solid #b3d9ff;
-      border-radius: 6px;
-      word-break: break-word;
-      font-size: 15px;
-      max-width: 100%;
-    }
-    #messages p strong {
-      color: #2c5aa0;
-    }
-    #form { 
-      padding: 18px 0;
-      background: #fafafa;
-      border-top: 1px solid #ddd;
-      width: 100vw;
-      margin: 0;
-      box-sizing: border-box;
-    }
-    .form-row {
-      display: flex;
-      gap: 8px;
-      max-width: 100%;
-      padding: 0 10px;
-    }
-    input[type="text"] {
-      padding: 10px 14px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 15px;
-      outline: none;
-      transition: border 0.2s;
-      background: #fff;
-    }
-    input[type="text"]:focus {
-      border-color: #4a90e2;
-    }
-    #username {
-      width: 10%;
-      min-width: 0;
-    }
-    #message {
-      width: 90%;
-      flex: 1;
-      min-width: 0;
-    }
-    button {
-      background: #4a90e2;
-      color: white;
-      border: 1px solid #357abd;
-      padding: 10px 20px;
-      border-radius: 4px;
-      font-size: 15px;
-      cursor: pointer;
-      transition: background 0.2s;
-      min-width: 80px;
-    }
-    button:hover {
-      background: #357abd;
-    }
-    button:active {
-      background: #2c5aa0;
-    }
-    @media (max-width: 900px) {
-      .form-row {
-        max-width: 100%;
-      }
-    }
+
+    /* Responsive */
     @media (max-width: 768px) {
-      h1 {
-        font-size: 20px;
-        padding: 14px 0;
+      .main {
+        flex-direction: column;
+        overflow-y: auto;
       }
-      #messages, #form {
-        padding-left: 8px;
-        padding-right: 8px;
+
+      .sidebar {
+        display: none;
+        width: 100%;
+        max-height: 150px;
+        max-width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #ddd;
       }
-      #messages {
-        padding-top: 16px;
-        padding-bottom: 16px;
+
+      #chatBox {
+        flex: 1;
       }
-      #form {
-        padding-top: 12px;
-        padding-bottom: 12px;
-      }
+
       .form-row {
         flex-direction: column;
-        gap: 8px;
-        max-width: 100%;
       }
-      #username, #message, button {
+
+      #message, button {
         width: 100%;
-        min-width: 0;
-        box-sizing: border-box;
-      }
-      button {
-        padding: 12px;
-        font-size: 16px;
-      }
-      #messages p {
-        font-size: 14px;
-        max-width: 100%;
       }
     }
+
   </style>
 </head>
 <body>
-  <h1>Web Chat Sederhana</h1>
-  <div id="messages"></div>
-  <form id="form">
-    <div class="form-row">
-      <input type="text" id="username" placeholder="Nama" autofocus required />
-      <input type="text" id="message" placeholder="Tulis pesan..." autocomplete="off" required />
-      <button type="submit">Kirim</button>
-    </div>
-  </form>
-</body>
-<script>
-  // inisialisasi socket.io di sisi client
-  const socket = io();
+  <div class="wrapper">
+    <header>
+      <div class="header-left">
+        <h1>Web Chat</h1>
+        <a href="/logout" onclick='localStorage.removeItem("username")'>Logout</a>
+      </div>
+    </header>
 
-  const form = document.getElementById("form");
+    <form action="/login" id="loginForm" method="POST">
+      <input type="text" name="username" id="username" placeholder="Masukkan Nama" autofocus required />
+      <button type="submit">Login</button>
+    </form>
+
+    <div class="main">
+      <aside class="sidebar">
+        <h3>Daftar Pengguna Online</h3>
+        <ul id="usersOnline"></ul>
+      </aside>
+
+      <div id="chatBox">
+        <div id="messages"></div>
+        <form id="form">
+          <div class="form-row">
+            <input type="text" id="message" placeholder="Tulis pesan..." autocomplete="off" autofocus required />
+            <button type="submit">Kirim</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+
+<script>
+
+  const loginForm = document.getElementById("loginForm");
   const username = document.getElementById("username");
+  const usersOnline = document.getElementById("usersOnline");
+  
+  const chatBox = document.getElementById("chatBox");
   const message = document.getElementById("message");
+  const form = document.getElementById("form");
   const messages = document.getElementById("messages");
+
+  // Simpan username ke localstorage
+  loginForm.addEventListener('submit', () => {
+    const uname = username.value;
+    localStorage.setItem("username", uname);
+  });
+
+  // Kirim auth ke server saat koneksi terjadi
+  const socket = io({
+    auth: { username: localStorage.getItem("username") }
+  });
+
+  socket.on('user list', (users) => {
+    usersOnline.innerHTML = users.map(u => `<li>${u}</li>`).join("");
+  });
 
   // Kirim 'pesan' ke server
   form.addEventListener('submit', (event) => {
     event.preventDefault(); 
-    const uname = username.value;
     const msg = message.value;
     
-    socket.emit('client msg', { username: uname, message: msg }); // Kirim sebagai objek
+    socket.emit('client msg', { message: msg }); // Kirim sebagai objek
 
     message.value = "";
   });
 
   // Terima 'pesan' dari server
+
+  
   socket.on('server msg', (msg) => {
     const item = document.createElement("p");
-    item.textContent = `${msg.username}: ${msg.message}`;
+    // elemen uname
+    const uname = document.createElement("span");
+    uname.className = "uname";
+    uname.textContent = `${msg.username}`;
+
+    // Elemen isi pesan
+    const messageText = document.createElement("span");
+    messageText.className = "messageText";
+    messageText.textContent = `${msg.message}`;
+
+    // elemen time
+    const time = document.createElement("span");
+    time.className = "time";
+    time.textContent = `${msg.sentAt}`;
+
+    item.appendChild(uname);
+    item.appendChild(messageText);
+    item.appendChild(time);
+
+    // item.textContent = `${msg.username}: ${msg.message}`;
+
+    if (msg.username === localStorage.getItem("username")) {
+      item.classList.add("me");
+    } else {
+      item.classList.add("other");
+    };
 
     messages.appendChild(item); // Tambah item sebagai tag baru ke dalam tag messages
-
     messages.scrollTop = messages.scrollHeight;
   });
+
+  // socket.on('user join', (msg) => {
+  //   if (msg) {
+  //     const join = document.createElement("p");
+  //     join.textContent = msg;
+
+  //     messages.appendChild(join);
+
+  //     messages.scrollTop = messages.scrollHeight;
+  //   };
+  // });
+
+  if (!localStorage.getItem("username")) {
+    chatBox.style.display = "none";
+  } else {
+    loginForm.style.display = "none";
+  };
 
 </script>
 </html>
