@@ -42,24 +42,41 @@ app.get('/logout', ( req, res ) => {
 // Hanya aktif kalau ada request dari sisi client setelah memuat file index.html (index.html harus ada dlu)
 io.on('connection', (socket) => {
   let username = socket.handshake.auth.username;
+
   if (username) {
     usersOnline[username] = socket.id;
     io.emit('user list', Object.keys(usersOnline));
-    // io.emit('user join', `${username} telah bergabung`);
 
-    socket.on('join group', (group) => {
+    socket.on('join group', ({ group, isJoin }) => {
       socket.join(group);
       if (!groups[group]) groups[group] = [];
-      
+
       if (!groups[group].includes(username)) {
         groups[group].push(username);
-        io.to(group).emit('server msg', { username: username, group: group });
+        io.to(group).emit('server msg', { 
+          username: username, 
+          group: group,
+          isJoin: isJoin,
+        });
+
       };
       
+
       io.to(group).emit('group users', groups[group]);
+    });
+
+    socket.on('leave group', (group) => {
+      socket.leave(group);
       
-      // console.log(typeof groups[group]);
-      // console.log(groups[group]);
+      if (groups[group]) {
+        groups[group] = groups[group].filter(user => user !== username);
+        io.to(group).emit('group users', groups[group]);
+        
+        // Kirim notifikasi bahwa user telah keluar grup
+        io.to(group).emit('server msg', { 
+          username: username
+        });
+      }
     });
 
   };
@@ -76,9 +93,9 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     
     if (username) {
-      // io.emit('user join', `${username} telah keluar`)
       delete usersOnline[username];
       io.emit('user list', Object.keys(usersOnline));
+
       for (let group in groups) {
         groups[group] = groups[group].filter(user => user !== username);
         io.to(group).emit('group users', groups[group]);

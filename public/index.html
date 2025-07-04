@@ -227,6 +227,7 @@
       border-radius: 4px;
     }
 
+
     /* Responsive */
     @media (max-width: 768px) {
       #main {
@@ -274,7 +275,7 @@
 
     <div id="main">
       <aside id="sidebar">
-        <div class="sidebar-component">
+        <div class="sidebar-component" id="join">
           <h3>Pilih Grup:</h3>
           <label for="groupSelect">Pilih Grup</label>
           <select id="groupSelect">
@@ -282,9 +283,12 @@
             <option value="teknologi">Teknologi</option>
             <option value="hiburan">Hiburan</option>
           </select>
-          <button onclick="joinGroup()">Gabung</button>
+          <button id="joinGroupBtn" onclick="joinGroup()">Gabung</button>
         </div>
-        <div class="sidebar-component">
+
+        <div class="sidebar-component" id="leave" style="display:none;">
+          <h3>Keluar Grup:</h3>
+          <button id="leaveGroupBtn" onclick="leaveGroup()">Keluar</button>
           <h3>Daftar Anggota Grup</h3>
           <ul id="groupUsers"></ul>
         </div>
@@ -294,7 +298,7 @@
         </div>
       </aside>
 
-      <div id="chatBox">
+      <div id="chatBox" style="display: none;">
         <div id="messages"></div>
         <form id="form">
           <div class="form-row">
@@ -305,6 +309,7 @@
       </div>
     </div>
   </div>
+  
 </body>
 
 <script>
@@ -313,6 +318,9 @@
   const username = document.getElementById("username");
   const usersOnline = document.getElementById("usersOnline");
 
+  const join = document.getElementById("join");
+  const leave = document.getElementById("leave");
+  
   const groupSelect = document.getElementById("groupSelect");
   const groupUsers = document.getElementById("groupUsers");
   
@@ -323,6 +331,7 @@
   const message = document.getElementById("message");
   const form = document.getElementById("form");
   const messages = document.getElementById("messages");
+
 
   // Simpan username ke localstorage
   loginForm.addEventListener('submit', () => {
@@ -335,12 +344,71 @@
     auth: { username: localStorage.getItem("username") }
   });
 
-  const joinGroup = () => {
+  // Modifikasi fungsi joinGroup
+  const joinGroup = (event) => {
     const group = groupSelect.value;
-    console.log(group)
+    socket.emit('join group', { group: group, isJoin: "no" });
+    // console.log(group)
     
-    socket.emit('join group', group);
+    // Tunggu sebentar agar emit sempat terkirim (sekitar 100ms)
+    setTimeout(() => {
+      localStorage.setItem("group", group);
+    }, 100);
+    
+    // Sembunyikan tombol gabung, tampilkan tombol keluar
+    join.style.display = "none";
+    leave.style.display = "block";
+    chatBox.style.display = "flex";
   };
+
+  // Tambahkan fungsi baru
+  const leaveGroup = () => {
+    const group = localStorage.getItem("group");
+    if (group) {
+      socket.emit('leave group', group); // Kirim ke server
+
+      // Tunggu sebentar agar emit sempat terkirim (sekitar 100ms)
+      setTimeout(() => {
+        localStorage.removeItem("group");
+        location.reload(); // Reload untuk hapus chat dari DOM
+      }, 100);
+    };
+    
+    // Sembunyikan tombol keluar, tampilkan tombol gabung
+    leave.style.display = "none";
+    join.style.display = "block";
+    
+    // Kosongkan daftar anggota grup
+    groupUsers.innerHTML = "";
+  };
+
+  // Aksi refresh halaman
+  window.addEventListener('DOMContentLoaded', function (e) {
+    const savedGroup = localStorage.getItem("group");
+    setTimeout(() => {
+      if (savedGroup) {
+        socket.emit('join group', { group: savedGroup, isJoin: "yes" });
+
+        join.style.display = "none";
+        leave.style.display = "block";
+        chatBox.style.display = "flex";
+      }
+    });
+
+  // document.body.addEventListener("mousemove", () => {
+    // socket.emit('leave group', group);
+    // localStorage.removeItem("group");
+  
+    // Sembunyikan tombol keluar, tampilkan tombol gabung
+    // leave.style.display = "none";
+    // join.style.display = "block";
+    
+    // // Kosongkan daftar anggota grup
+    // groupUsers.innerHTML = "";
+  // });
+
+
+  });
 
   socket.on('group users', (users) => {
     groupUsers.innerHTML = users.map(u => `<li>${u}</li>`).join("");
@@ -355,7 +423,7 @@
     event.preventDefault(); 
     const msg = message.value;
 
-    const group = groupSelect.value;
+    const group = localStorage.getItem("group");
     
     socket.emit('client msg', { group: group, message: msg }); // Kirim sebagai objek
 
@@ -366,10 +434,7 @@
   socket.on('server msg', (msg) => {
     const item = document.createElement("p");
 
-    console.log(msg.message);
-
     if (msg.message) {
-
       // elemen uname
       const uname = document.createElement("span");
       uname.className = "uname";
@@ -396,34 +461,36 @@
       } else {
         item.classList.add("other");
       };
+
     } else {
-      item.textContent = `${msg.username} bergabung ke group ${msg.group}`;
+
+      if (msg.group) {
+        if (msg.isJoin === "no") {
+          if (msg.username === localStorage.getItem("username")) {
+            item.textContent = `Anda bergabung ke grup ${msg.group}`;
+          } else {
+            item.textContent = `${msg.username} bergabung ke grup ${msg.group}`;
+          };
+        } 
+      } 
+      else {
+        item.textContent = `${msg.username} meninggalkan group`;
+      }
+   
     };
 
+    if (item.textContent) {
+      messages.appendChild(item); // Tambah item sebagai tag baru ke dalam tag messages
+      messages.scrollTop = messages.scrollHeight;
+    }
 
-
-    messages.appendChild(item); // Tambah item sebagai tag baru ke dalam tag messages
-    messages.scrollTop = messages.scrollHeight;
   });
 
-  // socket.on('user join', (msg) => {
-  //   if (msg) {
-  //     const join = document.createElement("p");
-  //     join.textContent = msg;
-
-  //     messages.appendChild(join);
-
-  //     messages.scrollTop = messages.scrollHeight;
-  //   };
-  // });
-
   if (!localStorage.getItem("username")) {
-    // chatBox.style.display = "none";
     logout.style.display = "none";
     main.style.display = "none";
-  } else {
-    loginForm.style.display = "none";
-  };
+  } 
+  else { loginForm.style.display = "none"; };
 
 </script>
 </html>

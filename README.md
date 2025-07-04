@@ -56,3 +56,34 @@ Proyek aplikasi web chat sederhana ini dibangun dengan [Node.js](https://nodejs.
       - socket.emit = kirim event ke **CLIENT/SERVER**.
       - io.emit = kirim event ke **SEMUA** client yang terhubung (dipakai di server saja).
 
+### Sesi 3 : Membuat Sistem Pengguna (Login & Status Online)
+
+- [x] Login & Logout (username only).
+- [x] Simpan dan hapus username (pakai localStorage).
+- [x] Bubble chat pribadi (kanan) & lain (kiri)
+
+<br />
+
+- Materi sesi 3 : Komponen komunikasi real-time (client-server)  
+   - event ditulis dalam bentuk string (event-driven programming).
+   - on = Menerima event
+      - socket.on('event', callback);
+      - io.on('connection', callback);
+
+   - emit = Mengirim event
+      - socket.emit('event', data);
+      - io.emit('event', data);
+   
+   -  Contoh alur komunikasi :
+      - CLIENT : socket.emit('pesan', data)   --->     SERVER : socket.on('pesan', callback)
+      - CLIENT : socket.on('balasan', callback)     <---     SERVER : socket.emit('balasan', data)
+
+### Sesi 4 : Membuat Fitur Chat Grup
+
+- [x] Menampilkan pilihan grup.
+- [x] Kirim pesan hanya ke user dalam grup yang sama.
+
+<br />
+
+- Materi sesi 3 : Komponen komunikasi real-time (client-server)  
+   - io.to() = mengirim pesan ke client tertentu/semua client yg ada di dalam sebuah "room" yg sama.
