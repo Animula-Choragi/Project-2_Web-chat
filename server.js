@@ -2,6 +2,8 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const session = require('express-session');
+const multer = require('multer');
+const path = require('path');
 
 const app = express(); // instance dari fungsi factory modul express (createApplication())
 const server = http.createServer(app); // instance dari class modul http (http.Server)
@@ -20,6 +22,25 @@ app.use(session({
 
 let usersOnline = {} // Simpan daftar pengguna online sebagai objek
 let groups = {};
+
+// Konfigurasi penyimpanan file upload
+const storage = multer.diskStorage({
+  destination: './public/uploads/',
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({ storage: storage });
+
+// Endpoint unggah file
+app.post('/upload', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).send("Tidak ada file yang diunggah.");
+
+  const fileUrl = `/uploads/${req.file.filename}`;
+
+  res.json({ fileUrl });
+});
 
 // Endpoint login
 app.post('/login', ( req, res ) => {
@@ -88,6 +109,16 @@ io.on('connection', (socket) => {
     
     // kirim 'pesan' ke semua client yg terhubung as object
     io.to(data.group).emit('server msg', { username: username, message: data.message, sentAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) });
+  });
+
+  // client kirim file
+  socket.on('send file', ({ fileUrl, group }) => {
+    console.log(`${username}: Unggah file di ${group} (fileUrl: ${fileUrl})`);
+    
+    io.to(group).emit('notification', "File baru telah dikirim!");
+
+    // Teruskan ke client di room sama
+    io.to(group).emit('file received', { fileUrl: fileUrl, username: username, sentAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) });
   });
 
   socket.on('disconnect', () => {

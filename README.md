@@ -85,5 +85,10 @@ Proyek aplikasi web chat sederhana ini dibangun dengan [Node.js](https://nodejs.
 
 <br />
 
-- Materi sesi 3 : Komponen komunikasi real-time (client-server)  
+- Materi sesi 4 : Komponen komunikasi real-time (client-server)  
    - io.to() = mengirim pesan ke client tertentu/semua client yg ada di dalam sebuah "room" yg sama.
+
+### Sesi 5 : Menambahkan Fitur Berbagi File dan Notifikasi
+
+- [x] Fitur berbagi file.
+- [x] Notifikasi saat berhasil berbagi file.

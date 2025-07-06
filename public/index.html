@@ -174,10 +174,17 @@
       margin-bottom: 4px;
     }
 
+    .me .uname {
+      display: none;
+    }
+
     .messageText {
       display: block;
     }
 
+    .fileLink {
+      display: block;
+    }
 
     .time {
       display: block;
@@ -188,6 +195,12 @@
     }
 
     #form {
+      padding: 14px;
+      background: #f0f0f0;
+      border-top: 1px solid #ddd;
+    }
+
+    #uploadForm {
       padding: 14px;
       background: #f0f0f0;
       border-top: 1px solid #ddd;
@@ -300,6 +313,12 @@
 
       <div id="chatBox" style="display: none;">
         <div id="messages"></div>
+        <form id="uploadForm" enctype="multipart/form-data">
+          <div class="form-row">
+            <input type="file" id="fileInput" required />
+            <button type="submit">Kirim File</button>
+          </div>
+        </form>
         <form id="form">
           <div class="form-row">
             <input type="text" id="message" placeholder="Tulis pesan..." autocomplete="off" autofocus required />
@@ -329,9 +348,27 @@
 
   const chatBox = document.getElementById("chatBox");
   const message = document.getElementById("message");
+  const uploadForm = document.getElementById("uploadForm");
+  const fileInput = document.getElementById("fileInput");
   const form = document.getElementById("form");
   const messages = document.getElementById("messages");
 
+  // Fungsi toast
+  function showToast(msg) {
+    const toast = document.createElement("div");
+    toast.style.position = "fixed";
+    toast.style.top = "5px";
+    toast.style.right = "5px";
+    toast.style.background = "#323232";
+    toast.style.color = "#fff";
+    toast.style.padding = "8px 14px";
+    toast.style.borderRadius = "8px";
+    toast.style.zIndex = "9999";
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+
+    setTimeout(() => { toast.remove(); }, 3000);
+  };
 
   // Simpan username ke localstorage
   loginForm.addEventListener('submit', () => {
@@ -385,15 +422,13 @@
   // Aksi refresh halaman
   window.addEventListener('DOMContentLoaded', function (e) {
     const savedGroup = localStorage.getItem("group");
-    setTimeout(() => {
-      if (savedGroup) {
-        socket.emit('join group', { group: savedGroup, isJoin: "yes" });
+    if (savedGroup) {
+      socket.emit('join group', { group: savedGroup, isJoin: "yes" });
 
-        join.style.display = "none";
-        leave.style.display = "block";
-        chatBox.style.display = "flex";
-      }
-    });
+      join.style.display = "none";
+      leave.style.display = "block";
+      chatBox.style.display = "flex";
+    }
 
   // document.body.addEventListener("mousemove", () => {
     // socket.emit('leave group', group);
@@ -416,6 +451,71 @@
 
   socket.on('user list', (users) => {
     usersOnline.innerHTML = users.map(u => `<li>${u}</li>`).join("");
+  });
+
+  // Kirim file
+  uploadForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    let file = fileInput.files[0];
+    if (!file) return;
+
+    let formData = new FormData();
+    formData.append('file', file);
+
+    const group = localStorage.getItem("group");
+
+    if (!group) return;
+
+    fetch('/upload', { method: "POST", body: formData })
+      .then(response => response.json())
+      .then(data => {
+        socket.emit('send file', { fileUrl: data.fileUrl, group: group });
+      });
+  });
+
+  // Terima file
+  socket.on('file received', ({ fileUrl, username, sentAt }) => {
+
+    // elemen uname
+    const uname = document.createElement("span");
+    uname.className = "uname";
+    uname.textContent = username;
+
+    // elemen isi
+    const fileName = fileUrl.split('/uploads/')[1];
+
+    const fileLink = document.createElement("a");
+    fileLink.href = fileUrl;
+    fileLink.target = "_blank";
+    fileLink.className = "fileLink";
+    // fileLink.innerText = "📂 File yang diunggah";
+    fileLink.innerText = fileName;
+
+    // elemen time
+    const time = document.createElement("span");
+    time.className = "time";
+    time.textContent = sentAt;
+
+    const fileText = document.createElement("p");
+
+    fileText.appendChild(uname);
+    fileText.appendChild(fileLink);
+    fileText.appendChild(time);
+
+    if (username === localStorage.getItem("username")) {
+      fileText.classList.add("me");
+    } else {
+      fileText.classList.add("other");
+    };
+
+    messages.appendChild(fileText);
+    messages.appendChild(document.createElement("br"));
+  })
+
+ // Notifikasi terima file 
+  socket.on('notification', (message) => {
+    showToast(message);
   });
 
   // Kirim 'pesan' ke server
@@ -486,6 +586,8 @@
 
   });
 
+
+  // Kondisi login & logout
   if (!localStorage.getItem("username")) {
     logout.style.display = "none";
     main.style.display = "none";
