@@ -1,14 +1,14 @@
 # 💬 Web chat Sederhana - Node.js, Express.js, dan Socket.io
 Proyek aplikasi web chat sederhana ini dibangun dengan [Node.js](https://nodejs.org/) (Runtime JavaScript Server-side) , [Express.js](https://expressjs.com/) (Framework Web Server), dan [Socket.io](https://socket.io/) (Komunikasi real-time WebSocket).
 
-## 🛠️ How To Setup Project (WIP)
+## 🛠️ How To Setup Project
 
 ### **A. Persiapan awal**
 
 1. **Clone repository berikut dengan mengetik di terminal/cmd :**
    ```bash
-   git clone https://github.com/Itsnope/web-chat.git
-   cd web-chat
+   git clone https://github.com/Animula-Choragi/Project-2_Web-chat.git
+   cd Project-2_Web-chat
    ```
 
 ### **B. Setup Library**
@@ -37,6 +37,8 @@ Proyek aplikasi web chat sederhana ini dibangun dengan [Node.js](https://nodejs.
    - HTTP untuk menangani permintaan HTTP biasa (misal : GET /).
    - WebSocket menangani permintaan real-time (upgrade ke websocket).
 
+<hr />
+
 ### Sesi 2 : Implementasi WebSocket untuk Pesan Teks
 
 - [x] Buat halaman HTML sederhana untuk chat.
@@ -55,6 +57,8 @@ Proyek aplikasi web chat sederhana ini dibangun dengan [Node.js](https://nodejs.
    - emit = Mengirim
       - socket.emit = kirim event ke **CLIENT/SERVER**.
       - io.emit = kirim event ke **SEMUA** client yang terhubung (dipakai di server saja).
+
+<hr />
 
 ### Sesi 3 : Membuat Sistem Pengguna (Login & Status Online)
 
@@ -78,6 +82,8 @@ Proyek aplikasi web chat sederhana ini dibangun dengan [Node.js](https://nodejs.
       - CLIENT : socket.emit('pesan', data)   --->     SERVER : socket.on('pesan', callback)
       - CLIENT : socket.on('balasan', callback)     <---     SERVER : socket.emit('balasan', data)
 
+<hr />
+
 ### Sesi 4 : Membuat Fitur Chat Grup
 
 - [x] Menampilkan pilihan grup.
@@ -87,6 +93,8 @@ Proyek aplikasi web chat sederhana ini dibangun dengan [Node.js](https://nodejs.
 
 - Materi sesi 4 : Komponen komunikasi real-time (client-server)  
    - io.to() = mengirim pesan ke client tertentu/semua client yg ada di dalam sebuah "room" yg sama.
+
+<hr />
 
 ### Sesi 5 : Menambahkan Fitur Berbagi File dan Notifikasi
 
