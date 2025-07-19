@@ -19,6 +19,12 @@ Proyek aplikasi web chat sederhana ini dibangun dengan [Node.js](https://nodejs.
    npm install
    ```
 
+### **C. Jalankan Project**
+1. Buka terminal/cmd di direktori proyek dan jalankan perintah :
+   ```bash
+   node server.js
+   ```
+
 <hr />
 
 ## 📝 Notes :
@@ -100,3 +106,10 @@ Proyek aplikasi web chat sederhana ini dibangun dengan [Node.js](https://nodejs.
 
 - [x] Fitur berbagi file.
 - [x] Notifikasi saat berhasil berbagi file.
+
+<hr />
+
+### Sesi 6 : Menambahkan Keamanan (Enkripsi Pesan)
+
+- [x] Enkripsi AES.
+- [x] Menambahkan RSA untuk mengamankan kunci AES.
