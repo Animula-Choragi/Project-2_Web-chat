@@ -1,5 +1,6 @@
 // Kunci AES (harus disimpan aman)
 const secretKey = "SECRET_KEY_123"; 
+const forge = window.forge;
 
 // get id html tag
 const loginForm = document.getElementById("loginForm");
@@ -21,6 +22,18 @@ const uploadForm = document.getElementById("uploadForm");
 const fileInput = document.getElementById("fileInput");
 const form = document.getElementById("form");
 const messages = document.getElementById("messages");
+
+
+fetch('/public-key')
+  .then(response => response.json())
+  .then(data => {
+    let publicKeyPem = data.publicKey;
+    let publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
+    let encryptedAESKey = forge.util.encode64(publicKey.encrypt(secretKey, "RSA-OAEP"));
+    // Kirim AES key terenkripsi ke server
+    socket.emit("send-aes-key", encryptedAESKey);
+  });
+
 
 // ============================= HANDLE LOGIN ==========================
 // Simpan username ke localstorage

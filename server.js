@@ -4,10 +4,25 @@ const { Server } = require('socket.io');
 const session = require('express-session');
 const multer = require('multer');
 const path = require('path');
+const CryptoJS = require('crypto-js');
+const forge = require('node-forge');
 
 const app = express(); // instance dari fungsi factory modul express (createApplication())
 const server = http.createServer(app); // instance dari class modul http (http.Server)
-const io = new Server(server); // instance dari class modul socket.io (Server)
+const io = new Server(server); // instance dari class modul socket.io (Server) 
+
+// Kunci RSA (🔐 Generate kunci RSA hanya sekali)
+const { privateKey, publicKey } = forge.pki.rsa.generateKeyPair({ bits: 2048 });
+
+// Fungsi untuk mengenkripsi kunci AES dengan RSA
+const encryptAESKey = (aesKey, publicKey) => {
+  return forge.util.encode64(publicKey.encrypt(aesKey, 'RSA-OAEP'));
+};
+
+// Fungsi untuk mendekripsi kunci AES dengan RSA
+const decryptAESKey = (encryptAESKey, privateKey) => {
+  return privateKey.decrypt(forge.util.decode64(encryptAESKey), 'RSA-OAEP');
+};
 
 
 app.use(express.static('public'));
@@ -20,7 +35,7 @@ app.use(session({
   saveUninitialized: true,
 }));
 
-let usersOnline = {} // Simpan daftar pengguna online sebagai objek
+let usersOnline = {}; // Simpan daftar pengguna online sebagai objek
 let groups = {};
 
 // Konfigurasi penyimpanan file upload
@@ -59,10 +74,37 @@ app.get('/logout', ( req, res ) => {
   res.redirect('/');
 });
 
+// Endpoint untuk memberikan kunci RSA kepada klien
+app.get("/public-key", (req, res) => {
+  res.send({ publicKey: forge.pki.publicKeyToPem(publicKey) });
+});
+
 
 // Hanya aktif kalau ada request dari sisi client setelah memuat file index.html (index.html harus ada dlu)
 io.on('connection', (socket) => {
   let username = socket.handshake.auth.username;
+  let aesKeyGlobal = null;
+
+  socket.on("send-aes-key", (encryptedAESKey) => {
+    try {
+      const aesKey = decryptAESKey(encryptedAESKey, privateKey);
+      aesKeyGlobal = aesKey;
+      // hanya untuk debug
+      // console.log("AES key diterima:", aesKey);
+    } catch (err) {
+      console.error("Gagal mendekripsi AES key:", err);
+    }
+  });
+
+  // Fungsi untuk mendekripsi pesan yang diterima
+  const decryptMessage = (encryptMessage) => {
+    if (!aesKeyGlobal) {
+      console.error("AES key is not defined. Cannot decrypt the message.");
+      return null;
+    }
+    let bytes = CryptoJS.AES.decrypt(encryptMessage, aesKeyGlobal);
+    return bytes.toString(CryptoJS.enc.Utf8);
+  };
 
   if (username) {
     usersOnline[username] = socket.id;
@@ -105,7 +147,10 @@ io.on('connection', (socket) => {
 
   // Terima 'pesan' dri client
   socket.on('client msg', (data) => {
-    console.log(`${username}: ${data.message}`);
+    console.log(`Enkripsi : ${username}: ${data.message}`);
+
+    let decryptedMessage = decryptMessage(data.message);
+    console.log(`Dekripsi : ${username}: ${decryptedMessage}`);
     
     // kirim 'pesan' ke semua client yg terhubung as object
     io.to(data.group).emit('server msg', { username: username, message: data.message, sentAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) });
